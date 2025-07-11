@@ -25,13 +25,14 @@ interface MoodTypes {
     'Depressed': string,
     'Angry': string,
     'Sick': string,
+    'Mimi': string,
 }
 
-interface MoodEntry {
+/* interface MoodEntry {
   group: string;
   date: string;
   mood: keyof MoodTypes;
-}
+} */
 
 /* Moods to add: Sad, Happy, Horny, Anxious/Mimi, calm, depressed, Nervous
   Annoyed, Surprised, Angry, Frustrated, Confused; Scared, Embarrased */
@@ -39,7 +40,7 @@ interface MoodEntry {
 export default function Dashboard() {
 
   const [selectedGroup, setSelectedGroup] =  useState<string>('Default')
-  const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([])
+  /* const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]) */
 
   const mockData: DataTypes = {
     num_Days: 14,
@@ -64,6 +65,7 @@ export default function Dashboard() {
     'Depressed': '😔',
     'Angry': '😠',
     'Sick': '🤒',
+    'Mimi': '🤪'
   }
 
   return (
@@ -107,7 +109,7 @@ export default function Dashboard() {
           )
         })}
       </div>
-      <Calendar />
+      <Calendar selectedGroup={selectedGroup}/>
     </div>
   )
 }
