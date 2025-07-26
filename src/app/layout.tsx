@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Open_Sans} from "next/font/google";
 import "./globals.css";
-import Header from "./components/Header"
-import Footer from "./components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,8 +11,6 @@ const opensans = Open_Sans({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
-
 
 export const metadata: Metadata = {
   title: "Feel Together",
@@ -30,11 +26,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${opensans.variable} antialiased` + ' w-full max-w-[1000px] mx-auto text-sm sm: text-base min-h-screen flex flex-col'}
+        className={`${geistSans.variable} ${opensans.variable} antialiased w-full max-w-[1000px] mx-auto text-sm sm:text-base min-h-screen flex flex-col`}
       >
-        <Header/>
         {children}
-        <Footer />
       </body>
     </html>
   );

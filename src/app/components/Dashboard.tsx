@@ -3,6 +3,8 @@
 import React, { useState } from 'react'
 import { Tektur } from "next/font/google";
 import Calendar from './Calendar';
+import MoodModal from './MoodModal';
+/* import { useAuth } from '../../../context/AuthContext'; */
 
 const tektur = Tektur({
   variable: "--font-tektur",
@@ -28,20 +30,52 @@ interface MoodTypes {
     'Mimi': string,
 }
 
-/* interface MoodEntry {
+type MoodEntry = {
+  emoji: string;
+  user: string;
   group: string;
-  date: string;
-  mood: keyof MoodTypes;
-} */
+}
 
 /* Moods to add: Sad, Happy, Horny, Anxious/Mimi, calm, depressed, Nervous
   Annoyed, Surprised, Angry, Frustrated, Confused; Scared, Embarrased */
 
+const mockCalendarData: { 
+  [year: number]: {
+    [month: number]: {
+      [day: number]: MoodEntry[]
+    }
+  }
+  } = {
+    2025: {
+      6: { // index of july
+        1: [{emoji: '😊', user: 'Pascual', group: 'Your Mood' }],
+        2: [{emoji: '😊', user: 'Janine',  group: 'Your Mood' }, 
+          {emoji: '😬', user: 'Bob', group: 'Your Mood' },
+          {emoji:'😊', user: 'Bill', group: 'Work'}
+        ],
+        5: [
+          {emoji: '😔', user: 'Pascual', group: 'Your Mood'}, 
+          {emoji: '😠', user: 'Janine', group: 'Your Mood'}, 
+          {emoji: '😭', user: 'Kelly', group: 'Your Mood'}
+        ],
+      },
+      5: {
+        10: [{emoji: '💩', user: 'Pascual', group: 'Your Mood'}],
+        14: [{emoji: '🥵', user: 'Janine', group: 'Your Mood'}, {emoji: '😊', user: 'Pascual', group: 'Your Mood'}],
+        }
+    }
+};
+
 export default function Dashboard() {
 
-  const [selectedGroup, setSelectedGroup] =  useState<string>('Default')
+  const [selectedGroup, setSelectedGroup] =  useState<string>('Your Mood')
   /* const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]) */
+  const [ calendarData, setCalendarData ] = useState(mockCalendarData)
+  const [ selectedMood, setSelectedMood ] = useState<{emoji: string; group: string} | null>(null)
+  const [ openModal, setOpenModal ] = useState(false)
 
+  /* const { currentUser, userData } = useAuth() */
+  
   const mockData: DataTypes = {
     num_Days: 14,
     time_Remaining: '13:14:26',
@@ -66,6 +100,63 @@ export default function Dashboard() {
     'Angry': '😠',
     'Sick': '🤒',
     'Mimi': '🤪'
+  }
+
+  const handleMoodSelect = (
+    mood: string,
+    day: number,
+    month: number,
+    year: number,
+    group: string,
+  ) => {
+    console.log("Selected mood: ", {mood, day, month, year, group})
+
+    const user = 'Pascual' // this will be from user on useAuth
+
+    //check if mood exists
+    const existingMoods = calendarData[year]?.[month]?.[day] || []
+
+    const alreadyAdded = existingMoods.some(
+      (entry) => entry.user === user && entry.group === group
+    )
+
+    if( alreadyAdded ) {
+      alert('You have already added a mood for this group')
+      return;
+    }
+
+    const newEntry = {emoji: mood, user, group};
+    const updatedData = {...calendarData}
+
+    if (!updatedData[year]) updatedData[year] = {};
+    if (!updatedData[year][month]) updatedData[year][month] = {}
+    if (!updatedData[year][month][day]) updatedData[year][month][day] = []
+
+
+    updatedData[year][month][day].push(newEntry)
+    setCalendarData(updatedData)
+    console.log(updatedData)
+    console.log(newEntry)
+    // all the info to go to firebase
+    // exemple: saveMoodToFirebase({ mood. day, month, year, group })
+  }
+
+  const handleClickEmoji = (emoji: string) => {
+    setSelectedMood({emoji, group: ''})
+    setOpenModal(true)
+  }
+
+  const getGroupsWithMoodToday = (): string[] => {
+    const currentDate = new Date();
+    const currentDay = currentDate.getDate();
+    const currentMonth = currentDate.getMonth()
+    const currentYear = currentDate.getFullYear();
+
+    const user = 'Pascual' // this will be from user on useAuth
+
+    return calendarData[currentYear]?.[currentMonth]?.[currentDay]
+      ?.filter(entry => entry.user === user)
+      .map(entry => entry.group) || []
   }
 
   return (
@@ -102,14 +193,42 @@ export default function Dashboard() {
       <div className='flex items-stretch flex-wrap gap-4'>
         {(Object.keys(emojiMoodTracking) as (keyof MoodTypes)[]).map((mood, moodIndex) => {
           return (
-            <button className={'p-4 rounded-lg pinkShadow duration-200 bg-pink-100 hover:bg-pink-200 text-center flex flex-col gap-3 flex-1 ' + (moodIndex === 8 && 'col-span-2 ')} key={moodIndex}>
+            <button 
+              className={'p-4 rounded-lg pinkShadow duration-200 bg-pink-100 hover:bg-pink-200 text-center flex flex-col gap-3 flex-1 ' + (moodIndex === 8 && 'col-span-2 ')} key={moodIndex}
+              onClick={() => handleClickEmoji(emojiMoodTracking[mood])}
+            >
               <p className={'text-4xl sm:text-5xl md:text-6xl'}>{emojiMoodTracking[mood]}</p>
               <p className={'text-pink-500 text-xs sm:text-sm md:-text-base ' + tektur.className}>{mood}</p>
             </button>
           )
         })}
       </div>
-      <Calendar selectedGroup={selectedGroup}/>
+      <MoodModal 
+        isOpen={openModal}
+        mood={selectedMood}
+        groups={groupsMock.map(g => g.name)}
+        groupsWithMoodToday={getGroupsWithMoodToday()}
+        onCancel={() => setOpenModal(false)}
+        onConfirm={(selectedGroups) => {
+
+          if (!selectedMood) return;
+          console.log(mockCalendarData)
+          const currentDate = new Date()
+          const currentDay = currentDate.getDate()
+          const currentMonth = currentDate.getMonth()
+          const currentYear = currentDate. getFullYear()
+
+          selectedGroups.forEach((groupName) => {
+            handleMoodSelect(selectedMood.emoji, currentDay, currentMonth, currentYear, groupName)
+          });
+          setOpenModal(false)
+        } }
+      />
+      <Calendar 
+        selectedGroup={selectedGroup} 
+        onMoodSelect={handleMoodSelect}
+        calendarData={calendarData}
+      />
     </div>
   )
 }

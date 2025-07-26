@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Tektur } from "next/font/google";
 
 const tektur = Tektur({
@@ -14,17 +14,23 @@ type MoodEntry = {
   group: string;
 }
 
-const mockCalendarData: { [day: number]: MoodEntry[] } = {
-  1: [{emoji: '😊', user: 'Pascual', group: 'Default' }],
-  2: [{emoji: '😊', user: 'Janine',  group: 'Default' }, {emoji: '😬', user: 'Bob', group: 'Default' }],
-  5: [
-    {emoji: '😔', user: 'Pascual', group: 'Default'}, 
-    {emoji: '😠', user: 'Janine', group: 'Default'}, 
-    {emoji: '😭', user: 'Kelly', group: 'Default'}
-  ],
-  10: [{emoji: '💩', user: 'Pascual', group: 'Default'}],
-  14: [{emoji: '🥵', user: 'Janine', group: 'Default'}, {emoji: '😊', user: 'Pascual', group: 'Default'}],
-};
+interface CalendarProps {
+  selectedGroup : string,
+  onMoodSelect: (
+    mood: string,
+    day: number,
+    month: number,
+    year: number,
+    group: string,
+  ) => void;
+  calendarData: {
+    [year: number]: {
+      [month: number]: {
+        [day: number]: MoodEntry[]
+      }
+    }
+  }
+}
 
 const months = [
   'January', 'February', 'March', 'April', 'May', 'June', 
@@ -32,27 +38,62 @@ const months = [
 ]
 
 const weekDaysList = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-const currentDate = new Date()
 
-export default function Calendar({ selectedGroup }: {selectedGroup : string}) {
+export default function Calendar({selectedGroup, /* onMoodSelect, */ calendarData}: CalendarProps) {
 
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
+  const [currentDate, setCurrentDate] = useState<Date | null>(null)
+  const [currentYear, setCurrentYear] = useState<number>(new Date().getFullYear())
+  const [currentMonthIndex, setcurrentMonthIndex] = useState<number>(new Date().getMonth())
   /* const { demoDisplay } = props */
 
-  const year = currentDate.getFullYear()
-  const monthIndex = currentDate.getMonth()
+  useEffect(() => {
+    setCurrentDate(new Date())
+  }, [])
 
-  const firstDay = new Date(year, monthIndex, 1).getDay()
-  const totalDays = new Date(year, monthIndex + 1, 0).getDate()
+  if(!currentDate) return null;
+
+  const firstDay = new Date(currentYear, currentMonthIndex, 1).getDay()
+  const totalDays = new Date(currentYear, currentMonthIndex + 1, 0).getDate()
 
   const daysArray = Array.from({ length: firstDay + totalDays }, (_, index) => {
     if (index < firstDay) return null
     return index - firstDay + 1
   })
 
+  const goToPreviousMonth = () => {
+    setcurrentMonthIndex((prev) => {
+      if(prev === 0) {
+        setCurrentYear((y) => y - 1)
+        return 11
+      }
+      return prev - 1
+    })
+  }
+
+  const goToNextMonth = () => {
+    setcurrentMonthIndex((prev) => {
+      if(prev === 11) {
+        setCurrentYear((y) => y + 1)
+        return 0
+      }
+      return prev + 1
+    })
+  }
+
+  /* if(!calendarData || !calendarData[currentYear]) {
+    return (
+      <div>Loading Calendar...</div>
+    )
+  } */
+
   return (
     <div className='flex flex-col text-center'>
-      <h3 className={'pb-4 ' + tektur.className}>{months[monthIndex]}</h3>
+      <h3 className={'pb-4 ' + tektur.className}>
+        <button onClick={goToPreviousMonth} className='text-xl hover:scale-100 transition mr-2 cursor-pointer'>&lt;</button>
+        {months[currentMonthIndex]} {currentYear}
+        <button onClick={goToNextMonth} className='text-xl hover:scale-100 transition ml-2 cursor-pointer'>&gt;</button>
+      </h3>
 
       {/*  Week days row */}
       <div className='text-center grid grid-cols-7'>
@@ -66,13 +107,21 @@ export default function Calendar({ selectedGroup }: {selectedGroup : string}) {
         {daysArray.map((day, index) => {
           if(!day) return <div key={index}></div> // Empty cell
 
-          const allMoods = mockCalendarData[day ?? 0] || [];
+          const allMoods = calendarData[currentYear]?.[currentMonthIndex]?.[day ?? 0] || [];
           const groupMoods = allMoods.filter((mood) => mood.group === selectedGroup);
-          
+          const isTodayDate = 
+            (
+              day === currentDate.getDate() &&
+              currentMonthIndex === currentDate.getMonth() &&
+              currentYear === currentDate.getFullYear()
+            )
+
           return (
             <div key={index} className='relative'>
               <div
-                className='h-[60px] m-2 border border-gray-300 text-left text-top p-1 rounded shadow-lg cursor-pointer hover:bg-pink-50 transition'
+                className={'h-[60px] m-2 border border-gray-300 text-left text-top p-1 rounded shadow-lg cursor-pointer hover:bg-pink-50 transition ' +
+                  (isTodayDate && ' bg-pink-200 border-gray-500')
+                }
                 onClick={() => setSelectedDay(selectedDay === day ? null : day)}
               >
                 <p className={'text-sm mb-1 ' + tektur.className}>{day}</p>
