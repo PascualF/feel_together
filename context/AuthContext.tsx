@@ -11,17 +11,21 @@ import {
     User, 
     createUserWithEmailAndPassword, 
     signInWithEmailAndPassword, 
+    signInWithPopup, 
     signOut 
 } from 'firebase/auth'
 
 import { auth, db } from '../firebase'
 import { doc, getDoc, DocumentData} from 'firebase/firestore'
+import { GoogleAuthProvider } from 'firebase/auth'
+import Loading from '@/app/components/Loading'
 
 interface AuthContextType {
     currentUser: User | null,
     userData: DocumentData | null,
     login: (email: string, password: string) => Promise<void>,
     signup: (email: string, password: string) => Promise<void>,
+    signinWithGoogle: () => Promise<void>,
     logout: () => Promise<void>,
     loading: boolean,
 }
@@ -55,6 +59,16 @@ export const AuthProvider = ({ children } : { children: ReactNode }) => {
         } catch(error) {
             console.error("Signup error:", error);
             throw error;
+        }
+    }
+
+    const signinWithGoogle = async() => {
+        try{
+            const provider = new GoogleAuthProvider();
+            await signInWithPopup(auth, provider)
+        } catch(error) {
+            console.log("Google SignIn error: ", error)
+            throw error
         }
     }
 
@@ -107,11 +121,16 @@ export const AuthProvider = ({ children } : { children: ReactNode }) => {
         userData,
         login,
         signup,
+        signinWithGoogle,
         logout,
         loading
     }
 
-    if (loading) return null // adding a spinner??
+    if (loading) {
+        return (
+            <Loading />
+        )
+    }
 
     return (
         <AuthContext.Provider value={value}>

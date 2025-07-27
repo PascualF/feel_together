@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Tektur } from "next/font/google";
 import Calendar from './Calendar';
 import MoodModal from './MoodModal';
-/* import { useAuth } from '../../../context/AuthContext'; */
+import { useAuth } from '../../../context/AuthContext';
 
 const tektur = Tektur({
   variable: "--font-tektur",
@@ -74,8 +74,9 @@ export default function Dashboard() {
   const [ selectedMood, setSelectedMood ] = useState<{emoji: string; group: string} | null>(null)
   const [ openModal, setOpenModal ] = useState(false)
 
-  /* const { currentUser, userData } = useAuth() */
-  
+  const { currentUser, userData } = useAuth()
+  console.log( currentUser )
+  console.log( userData )
   const mockData: DataTypes = {
     num_Days: 14,
     time_Remaining: '13:14:26',

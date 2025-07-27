@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Open_Sans} from "next/font/google";
 import "./globals.css";
+import AppWrapper from "./components/AppWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +29,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${opensans.variable} antialiased w-full max-w-[1000px] mx-auto text-sm sm:text-base min-h-screen flex flex-col`}
       >
-        {children}
+        <AppWrapper>
+          {children}
+        </AppWrapper>
       </body>
     </html>
   );
