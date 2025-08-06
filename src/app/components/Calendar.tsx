@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from 'react'
 import { Tektur } from "next/font/google";
+import { Bouncy } from 'ldrs/react'
+import 'ldrs/react/Bouncy.css'
 
 const tektur = Tektur({
   variable: "--font-tektur",
@@ -16,6 +18,7 @@ type MoodEntry = {
 
 interface CalendarProps {
   selectedGroup : string,
+  loadingData: boolean;
   onMoodSelect: (
     mood: string,
     day: number,
@@ -39,7 +42,7 @@ const months = [
 
 const weekDaysList = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-export default function Calendar({selectedGroup, /* onMoodSelect, */ calendarData}: CalendarProps) {
+export default function Calendar({selectedGroup, loadingData, calendarData}: CalendarProps) {
 
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
   const [currentDate, setCurrentDate] = useState<Date | null>(null)
@@ -102,6 +105,17 @@ export default function Calendar({selectedGroup, /* onMoodSelect, */ calendarDat
           ))}
       </div>
 
+      <div className=''>
+        {/* LDRS, bouncy loading button while fetching data */}
+        {loadingData && (
+            <Bouncy
+              size="30"
+              speed="1.00"
+              color="pink" 
+            />
+          )}
+      </div>
+
       {/* Calendar grid */}
       <div className='text-center grid grid-cols-7'>
         {daysArray.map((day, index) => {
@@ -153,6 +167,7 @@ export default function Calendar({selectedGroup, /* onMoodSelect, */ calendarDat
                 </div>
               )}
             </div>
+
           )
         })}
       </div>

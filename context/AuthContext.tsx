@@ -16,13 +16,19 @@ import {
 } from 'firebase/auth'
 
 import { auth, db } from '../firebase'
-import { doc, getDoc, DocumentData} from 'firebase/firestore'
+import { doc, getDoc, setDoc} from 'firebase/firestore'
 import { GoogleAuthProvider } from 'firebase/auth'
 import Loading from '@/app/components/Loading'
 
+interface UserData {
+    email: string;
+    displayName?: string;
+    createdAt?: Date;
+}
+
 interface AuthContextType {
     currentUser: User | null,
-    userData: DocumentData | null,
+    userData: UserData | null,
     login: (email: string, password: string) => Promise<void>,
     signup: (email: string, password: string) => Promise<void>,
     signinWithGoogle: () => Promise<void>,
@@ -41,7 +47,7 @@ export function useAuth() {
 export const AuthProvider = ({ children } : { children: ReactNode }) => {
 
     const [currentUser, setCurrentUser] = useState<User | null>(null)
-    const [userData, setUserData] = useState<DocumentData | null>(null)
+    const [userData, setUserData] = useState<UserData | null>(null)
     const [loading, setLoading] = useState(true)
 
     const login = async (email: string, password: string) => {
@@ -55,7 +61,13 @@ export const AuthProvider = ({ children } : { children: ReactNode }) => {
 
     const signup = async (email: string, password: string) => {
         try{
-            await createUserWithEmailAndPassword(auth, email, password)
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+            const user = userCredential.user
+
+            await setDoc(doc(db, 'users', user.uid), {
+                email: user.email,
+                createdAt: new Date()
+            })
         } catch(error) {
             console.error("Signup error:", error);
             throw error;
@@ -65,7 +77,18 @@ export const AuthProvider = ({ children } : { children: ReactNode }) => {
     const signinWithGoogle = async() => {
         try{
             const provider = new GoogleAuthProvider();
-            await signInWithPopup(auth, provider)
+            const result = await signInWithPopup(auth, provider)
+            const user = result.user
+
+            const docRef = doc(db, 'users', user.uid)
+            const docSnap = await getDoc(docRef)
+            if(!docSnap.exists()) {
+                await setDoc(docRef, {
+                    email: user.email,
+                    createdAt: new Date(),
+                    displayName: user.displayName || ''
+                })
+            }
         } catch(error) {
             console.log("Google SignIn error: ", error)
             throw error
@@ -99,9 +122,9 @@ export const AuthProvider = ({ children } : { children: ReactNode }) => {
                     const docRef = doc(db, 'users', user.uid)
                     const docSnap = await getDoc(docRef)
                     if (docSnap.exists()) {
-                        const firebaseData = docSnap.data()
+                        const firebaseData = docSnap.data() as UserData
                         setUserData(firebaseData)
-                        console.log(userData)
+                        console.log("User Data set",firebaseData)
                     }
                 
                 } catch (error) {
@@ -113,8 +136,15 @@ export const AuthProvider = ({ children } : { children: ReactNode }) => {
         });
 
         return unsubscribe // Then clean listener component unmount
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
+
+
+    // testing userData and currentUser
+    useEffect(() => {
+        console.log("Auth ")
+        console.log(currentUser)
+        console.log(userData)
+    })
 
     const value = {
         currentUser,
