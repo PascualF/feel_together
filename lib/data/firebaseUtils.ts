@@ -3,6 +3,7 @@ import { collection, addDoc, Timestamp } from "firebase/firestore"
 
 export const saveMoodToFirestore = async ({
     userId,
+    username,
     group,
     emoji,
     day,
@@ -10,6 +11,7 @@ export const saveMoodToFirestore = async ({
     year
 }: {
     userId: string;
+    username: string;
     group: string;
     emoji: string;
     day: number;
@@ -19,6 +21,7 @@ export const saveMoodToFirestore = async ({
     try {
         const docRef = await addDoc(collection(db, "moods"), {
             userId,
+            username,
             group,
             emoji,
             day,

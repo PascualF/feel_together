@@ -13,6 +13,7 @@ const tektur = Tektur({
 type MoodEntry = {
   emoji: string;
   user: string;
+  username: string | null | undefined;
   group: string;
 }
 
@@ -162,7 +163,7 @@ export default function Calendar({selectedGroup, loadingData, calendarData}: Cal
                 <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-3 py-2 bg-black text-white text-xs rounded z-50 w-max shadow-xl animate-fadeInScale">
                   <p className='mb-1 font-semibold'>Moods on day {day}:</p>
                   {groupMoods.map((mood, index) => (
-                    <p key={index}>{mood.user} felt {mood.emoji}</p>
+                    <p key={index}>{mood.username} felt {mood.emoji}</p>
                   ))}
                 </div>
               )}

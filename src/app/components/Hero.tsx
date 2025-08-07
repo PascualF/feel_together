@@ -28,7 +28,7 @@ export default function Hero() {
               <Button text={'Login'} dark={true} widthFull={false}/>
             </Link>
         </div>
-        <Calendar selectedGroup={''} onMoodSelect={(mood) => console.log(mood)} calendarData={mockCalendarData} />
+        <Calendar selectedGroup={''} loadingData={false} onMoodSelect={(mood) => console.log(mood)} calendarData={mockCalendarData} />
     </div>
   )
 }

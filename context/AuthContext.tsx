@@ -30,7 +30,7 @@ interface AuthContextType {
     currentUser: User | null,
     userData: UserData | null,
     login: (email: string, password: string) => Promise<void>,
-    signup: (email: string, password: string) => Promise<void>,
+    signup: (email: string, password: string, username: string) => Promise<void>,
     signinWithGoogle: () => Promise<void>,
     logout: () => Promise<void>,
     loading: boolean,
@@ -59,14 +59,15 @@ export const AuthProvider = ({ children } : { children: ReactNode }) => {
         }
     }
 
-    const signup = async (email: string, password: string) => {
+    const signup = async (email: string, password: string, username: string) => {
         try{
             const userCredential = await createUserWithEmailAndPassword(auth, email, password)
             const user = userCredential.user
 
             await setDoc(doc(db, 'users', user.uid), {
                 email: user.email,
-                createdAt: new Date()
+                createdAt: new Date(),
+                displayName: username
             })
         } catch(error) {
             console.error("Signup error:", error);

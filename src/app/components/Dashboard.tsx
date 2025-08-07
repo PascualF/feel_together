@@ -36,6 +36,7 @@ interface MoodTypes {
 type MoodEntry = {
   emoji: string;
   user: string;
+  username: string | null | undefined;
   group: string;
   day: number;
   month: number;
@@ -79,7 +80,6 @@ const fetchMoodEntries = async (userId: string) => {
     where("userId", "==", userId)
   );
 
-
   const querySnapshot = await getDocs(queryFilteredByUserLogged);
 
   const entries: MoodEntry[] = []
@@ -89,6 +89,7 @@ const fetchMoodEntries = async (userId: string) => {
       entries.push({
         emoji: data.emoji,
         user:data.userId,
+        username:data.displayName,
         group: data.group,
         day: data.day,
         month: data.month,
@@ -156,7 +157,9 @@ export default function Dashboard() {
     console.log("Selected mood: ", {mood, day, month, year, group})
 
     const user = currentUser?.uid;
+    const userDisplayName = currentUser?.displayName
     if(!user) return alert("You must be logged in");
+    
 
     //check if mood exists, preveting double submissions
     const existingMoods = calendarData[year]?.[month]?.[day] || []
@@ -172,12 +175,12 @@ export default function Dashboard() {
     console.log('Before Firestore', user)
 
     // Save to firestore
-    await saveMoodToFirestore({userId: user, group, emoji: mood, day, month, year})
+    await saveMoodToFirestore({userId: user, username:userDisplayName ?? '' , group, emoji: mood, day, month, year})
 
     console.log('After Firestore', user)
 
     // Update UI
-    const newEntry = {emoji: mood, user, group, day, month, year};
+    const newEntry = {emoji: mood, user, username: userDisplayName, group, day, month, year};
     const updatedData = {...calendarData}
     if (!updatedData[year]) updatedData[year] = {};
     if (!updatedData[year][month]) updatedData[year][month] = {}
@@ -198,7 +201,7 @@ export default function Dashboard() {
         if (!calendar[year][month]) calendar[year][month] = {};
         if (!calendar[year][month][day]) calendar[year][month][day] = [];
 
-        calendar[year][month][day].push({ emoji, user, group, day, month, year })
+        calendar[year][month][day].push({ emoji, user, username: userDisplayName, group, day, month, year })
       })
       setCalendarData(calendar)
       })
@@ -232,12 +235,12 @@ export default function Dashboard() {
       const entries = await fetchMoodEntries(currentUser.uid);
       const calendar: typeof calendarData = {};
 
-      entries.forEach(({ emoji, user, group, day, month, year }) => {
+      entries.forEach(({ emoji, user, username, group, day, month, year }) => {
         if (!calendar[year]) calendar[year] = {};
         if (!calendar[year][month]) calendar[year][month] = {};
         if (!calendar[year][month][day]) calendar[year][month][day] = [];
 
-        calendar[year][month][day].push({ emoji, user, group, day, month, year })
+        calendar[year][month][day].push({ emoji, user, username, group, day, month, year })
       })
 
       setCalendarData(calendar)
